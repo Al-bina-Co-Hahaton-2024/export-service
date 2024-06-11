@@ -167,6 +167,8 @@ public class DoctorReportCardFileGenerator {
             ws.value(line, i, data.get(i));
             ws.style(line, i)
                     .horizontalAlignment("center")
+                    .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
+                    .borderStyle(BorderSide.TOP, BorderStyle.THIN)
                     .verticalAlignment("center")
                     .wrapText(true)
                     .set();
@@ -177,6 +179,12 @@ public class DoctorReportCardFileGenerator {
             ws.value(line + j, i, templateHours.get(j));
             this.regularStyle(ws.style(line + j, i));
         }
+        ws.style(line, i)
+                .borderStyle(BorderSide.TOP, BorderStyle.THIN)
+                .set();
+        ws.style(line + EMPLOYEE_SPACE - 1, i)
+                .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
+                .set();
         i++;
 
         final var hours = IntStream.range(1, now.lengthOfMonth() + 1)
@@ -216,12 +224,14 @@ public class DoctorReportCardFileGenerator {
                     break;
                 }
             }
+            ws.style(line, i)
+                    .borderStyle(BorderSide.TOP, BorderStyle.THIN)
+                    .set();
+            ws.style(line + EMPLOYEE_SPACE - 1, i)
+                    .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
+                    .set();
             i++;
         }
-        ws.range(line, 0, EMPLOYEE_SPACE + line, i).style()
-                .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
-                .borderStyle(BorderSide.TOP, BorderStyle.THIN)
-                .set();
     }
 
     private List<String> calculateHours(LocalDate now, Map<LocalDate, DoctorLoad> dayWorkDoctors, int start, int end) {
