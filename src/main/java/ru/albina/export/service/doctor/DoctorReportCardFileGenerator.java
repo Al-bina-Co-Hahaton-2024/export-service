@@ -87,7 +87,10 @@ public class DoctorReportCardFileGenerator {
                 ws.value(0, index, String.format("Число месяцев (%s)", targetDate));
                 this.headerStyle(ws.style(0, index));
 
-                final var titles = IntStream.range(1, targetDate.lengthOfMonth() + 1).mapToObj(Objects::toString).collect(Collectors.toList());
+                final var titles = IntStream.range(1, targetDate.lengthOfMonth() + 1)
+                        .mapToObj(targetDate::withDayOfMonth)
+                        .map(localDate -> targetDate.getDayOfMonth() + "\n" + targetDate.getDayOfWeek())
+                        .collect(Collectors.toList());
                 titles.add(15, "Итого за 1 пол. месяца");
                 titles.add("Итого за 2 пол. месяца");
 
@@ -194,10 +197,11 @@ public class DoctorReportCardFileGenerator {
                     if (load != null) {
                         final var doubleHours = Optional.ofNullable(load.getTakenHours()).orElse(0d) + Optional.ofNullable(load.getTakenExtraHours()).orElse(0d);
                         final var doctorHours = this.time(doubleHours);
+                        final var warmup = (doubleHours < 6) ? 0 : (doubleHours <= 8) ? 30 : 60;
                         return List.of(
                                 Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.format(DATE_TIME_FORMATTER)).orElse(""),
-                                Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.plus(doctorHours).format(DATE_TIME_FORMATTER)).orElse(""),
-                                ((doubleHours < 6) ? 0 : (doubleHours <= 8) ? 30 : 1) + "",
+                                Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.plus(doctorHours).plusMinutes(warmup).format(DATE_TIME_FORMATTER)).orElse(""),
+                                warmup + "",
                                 this.format(doctorHours)
                         );
                     } else {
@@ -241,6 +245,9 @@ public class DoctorReportCardFileGenerator {
 
 
     private String format(Duration duration) {
+        if (duration.toMinutesPart() == 0) {
+            return duration.toHours() + "";
+        }
         return String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
     }
 
