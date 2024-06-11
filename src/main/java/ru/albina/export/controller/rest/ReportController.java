@@ -7,26 +7,27 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.albina.backlib.configuration.WebConstants;
 import ru.albina.backlib.configuration.auto.OpenApiConfiguration;
-import ru.albina.export.dto.request.CreateDoctorReportCardRequest;
 import ru.albina.export.dto.response.ExportDto;
-import ru.albina.export.service.DoctorReportCardExportService;
+import ru.albina.export.service.ExportDtoService;
+
+import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping(WebConstants.FULL_WEB + "/doctor-report-cards")
+@RequestMapping(WebConstants.FULL_WEB + "/reports")
 @RequiredArgsConstructor
-public class DoctorReportCardController {
+public class ReportController {
 
-    private final DoctorReportCardExportService doctorReportCardExportService;
+    private final ExportDtoService exportDtoService;
 
     @Operation(
-            summary = "Создать табель",
+            summary = "Получить статус отчета по ID",
             security = @SecurityRequirement(name = OpenApiConfiguration.JWT),
             responses = {
                     @ApiResponse(
@@ -37,12 +38,10 @@ public class DoctorReportCardController {
             }
     )
     //TODO @PreAuthorize("hasAnyRole('ADMIN')")
-    @PostMapping
+    @GetMapping("/{id}")
     public ExportDto createDoctorReportCard(
-            @RequestBody CreateDoctorReportCardRequest createDoctorReportCardRequest
+            @PathVariable("id") UUID id
     ) {
-        return this.doctorReportCardExportService.generate(
-                createDoctorReportCardRequest.getDate()
-        );
+        return this.exportDtoService.getById(id);
     }
 }
