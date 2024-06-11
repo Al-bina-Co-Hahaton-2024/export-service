@@ -7,10 +7,14 @@ import org.dhatim.fastexcel.Worksheet;
 import org.springframework.stereotype.Service;
 import ru.albina.export.client.MedicalClient;
 import ru.albina.export.client.PlannerClient;
+import ru.albina.export.client.ReferenceClient;
+import ru.albina.export.client.UserClient;
 import ru.albina.export.component.FileComponent;
 import ru.albina.export.dto.medical.Doctor;
 import ru.albina.export.dto.schedule.DayWorkSchedule;
 import ru.albina.export.dto.schedule.DoctorLoad;
+import ru.albina.export.dto.user.UserDto;
+import ru.albina.export.dto.user.UserFullName;
 import ru.albina.export.mapper.MedicalMapper;
 
 import java.io.File;
@@ -50,6 +54,9 @@ public class DoctorReportCardFileGenerator {
 
     private final MedicalClient medicalClient;
     private final PlannerClient plannerClient;
+    private final UserClient userClient;
+    private final ReferenceClient referenceClient;
+
     private final FileComponent fileComponent;
 
     private final MedicalMapper medicalMapper;
@@ -107,12 +114,21 @@ public class DoctorReportCardFileGenerator {
 
 
         final var doctors = this.medicalClient.getDoctors();
+        final var users = this.userClient.getUsers(doctors.stream().map(Doctor::getId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(UserDto::getId, UserDto::getFullName));
         final var planner = this.plannerClient.getScheduler(targetDate);
+
+        final var hours = this.referenceClient.getHours(targetDate.getYear(), targetDate.getMonthValue());
 
 
         var top = 2;
         for (final var doctor : doctors) {
-            this.generate(ws, top, targetDate, doctor,
+            this.generate(ws,
+                    top,
+                    targetDate,
+                    hours,
+                    users.getOrDefault(doctor.getId(), UserFullName.builder().last("Er").first("ro").last("r").build()),
+                    doctor,
                     planner.stream()
                             .filter(dayWorkSchedule -> dayWorkSchedule.getDoctors().stream().anyMatch(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())))
                             .collect(Collectors.toMap(
@@ -138,10 +154,10 @@ public class DoctorReportCardFileGenerator {
     }
 
 
-    private void generate(Worksheet ws, int line, LocalDate now, Doctor doctor, Map<LocalDate, DoctorLoad> dayWorkDoctors) {
+    private void generate(Worksheet ws, int line, LocalDate now, double hoursForMonth, UserFullName userFullName, Doctor doctor, Map<LocalDate, DoctorLoad> dayWorkDoctors) {
 
         final var data = List.of(
-                "TODO",
+                String.format("%s %s %s", userFullName.getLast(), userFullName.getFirst(), userFullName.getMiddle()),
                 this.medicalMapper.modality(doctor.getModality()),
                 this.medicalMapper.modality(doctor.getOptionalModality()),
                 doctor.getRate() + "",
@@ -187,7 +203,7 @@ public class DoctorReportCardFileGenerator {
         hours.add(this.calculateHours(now, dayWorkDoctors, 16, now.lengthOfMonth()));
 
         hours.add(this.calculateHours(now, dayWorkDoctors, 1, now.lengthOfMonth()));
-        hours.add(List.of("TODO - refs"));
+        hours.add(List.of("" + hoursForMonth));
 
         hours.add(List.of(""));
         hours.add(List.of(""));
