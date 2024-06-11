@@ -46,7 +46,7 @@ public class ExportEntity {
     private LocalDateTime createdDate;
 
     @NotNull
-    @Column(name = "modified_date", nullable = false)
+    @Column(name = "modified_date", nullable = false, updatable = false)
     @LastModifiedDate
     private LocalDateTime modifiedDate;
 
