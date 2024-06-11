@@ -1,6 +1,7 @@
 package ru.albina.export.service.doctor;
 
 import lombok.RequiredArgsConstructor;
+import org.dhatim.fastexcel.BorderStyle;
 import org.dhatim.fastexcel.StyleSetter;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
@@ -105,7 +106,7 @@ public class DoctorReportCardFileGenerator {
             ws.range(0, index, 1, index).merge();
             ws.value(0, index, headerText);
             this.headerStyle(ws.style(0, index));
-            ws.width(index, 30);
+            ws.width(index, 8);
             index++;
         }
 
@@ -220,7 +221,9 @@ public class DoctorReportCardFileGenerator {
             }
             i++;
         }
-        //ws.range(line, 0, EMPLOYEE_SPACE + line, i).style().borderStyle(BorderStyle.MEDIUM_DASH_DOT_DOT);
+        ws.range(line, 0, EMPLOYEE_SPACE + line, i).style()
+                .borderStyle(BorderStyle.THICK)
+                .set();
     }
 
     private List<String> calculateHours(LocalDate now, Map<LocalDate, DoctorLoad> dayWorkDoctors, int start, int end) {
@@ -232,7 +235,7 @@ public class DoctorReportCardFileGenerator {
 
 
     private String format(Duration duration) {
-        return String.format("%s:%s", duration.toHours(), duration.toMinutesPart());
+        return String.format("%02d:%02d", duration.toHours(), duration.toMinutesPart());
     }
 
     private Duration time(Double hoursDoubleObj) {
