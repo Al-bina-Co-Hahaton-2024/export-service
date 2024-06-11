@@ -25,4 +25,7 @@
             </column>
         </createTable>
     </changeSet>
+    <changeSet id="002" author="alexander (bigtows) chapchuk">
+        <modifyDataType tableName="export" columnName="link" newDataType="varchar(300)"/>
+    </changeSet>
 </databaseChangeLog>
