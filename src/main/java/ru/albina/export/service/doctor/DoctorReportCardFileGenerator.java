@@ -1,10 +1,7 @@
 package ru.albina.export.service.doctor;
 
 import lombok.RequiredArgsConstructor;
-import org.dhatim.fastexcel.BorderStyle;
-import org.dhatim.fastexcel.StyleSetter;
-import org.dhatim.fastexcel.Workbook;
-import org.dhatim.fastexcel.Worksheet;
+import org.dhatim.fastexcel.*;
 import org.springframework.stereotype.Service;
 import ru.albina.export.client.MedicalClient;
 import ru.albina.export.client.PlannerClient;
@@ -222,7 +219,8 @@ public class DoctorReportCardFileGenerator {
             i++;
         }
         ws.range(line, 0, EMPLOYEE_SPACE + line, i).style()
-                .borderStyle(BorderStyle.THICK)
+                .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
+                .borderStyle(BorderSide.TOP, BorderStyle.THIN)
                 .set();
     }
 
