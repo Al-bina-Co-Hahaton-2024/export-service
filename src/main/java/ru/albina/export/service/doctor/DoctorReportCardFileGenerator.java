@@ -224,9 +224,9 @@ public class DoctorReportCardFileGenerator {
                     break;
                 }
             }
-            ws.style(line, i)
-                    .borderStyle(BorderSide.TOP, BorderStyle.THIN)
-                    .set();
+//            ws.style(line, i)
+//                    .borderStyle(BorderSide.TOP, BorderStyle.THIN)
+//                    .set();
             ws.style(line + EMPLOYEE_SPACE - 1, i)
                     .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
                     .set();
