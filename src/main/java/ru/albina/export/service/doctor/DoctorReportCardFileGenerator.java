@@ -166,7 +166,7 @@ public class DoctorReportCardFileGenerator {
         i++;
 
         final var hours = IntStream.range(1, now.lengthOfMonth() + 1)
-                .mapToObj(now::plusDays)
+                .mapToObj(now::withDayOfMonth)
                 .map(date -> {
                     final var load = dayWorkDoctors.get(date);
                     if (load != null) {
@@ -215,7 +215,7 @@ public class DoctorReportCardFileGenerator {
 
 
     private String format(Duration duration) {
-        return String.format("%02d:%02d", duration.toHours(), duration.toMinutes());
+        return String.format("%s:%s", duration.toHours(), duration.toMinutes());
     }
 
     private Duration time(Double hoursDoubleObj) {
