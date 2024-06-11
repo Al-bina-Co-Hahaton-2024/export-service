@@ -173,8 +173,8 @@ public class DoctorReportCardFileGenerator {
                         final var doubleHours = Optional.ofNullable(load.getTakenHours()).orElse(0d) + Optional.ofNullable(load.getTakenExtraHours()).orElse(0d);
                         final var doctorHours = this.time(doubleHours);
                         return List.of(
-                                doctor.getStartWorkDay().format(DATE_TIME_FORMATTER),
-                                doctor.getStartWorkDay().plus(doctorHours).format(DATE_TIME_FORMATTER),
+                                Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.format(DATE_TIME_FORMATTER)).orElse(""),
+                                Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.plus(doctorHours).format(DATE_TIME_FORMATTER)).orElse(""),
                                 ((doubleHours < 6) ? 0 : (doubleHours <= 8) ? 30 : 1) + "",
                                 this.format(doctorHours)
                         );
