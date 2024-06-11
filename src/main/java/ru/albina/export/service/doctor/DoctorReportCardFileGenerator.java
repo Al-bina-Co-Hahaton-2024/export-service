@@ -1,26 +1,34 @@
 package ru.albina.export.service.doctor;
 
 import lombok.RequiredArgsConstructor;
+import org.dhatim.fastexcel.StyleSetter;
 import org.dhatim.fastexcel.Workbook;
 import org.dhatim.fastexcel.Worksheet;
 import org.springframework.stereotype.Service;
 import ru.albina.export.client.MedicalClient;
 import ru.albina.export.client.PlannerClient;
 import ru.albina.export.component.FileComponent;
+import ru.albina.export.dto.medical.Doctor;
+import ru.albina.export.dto.schedule.DayWorkSchedule;
+import ru.albina.export.dto.schedule.DoctorLoad;
+import ru.albina.export.mapper.MedicalMapper;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
 public class DoctorReportCardFileGenerator {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private static final String PLACEHOLDER = "{MONTH}";
 
@@ -43,6 +51,8 @@ public class DoctorReportCardFileGenerator {
     private final MedicalClient medicalClient;
     private final PlannerClient plannerClient;
     private final FileComponent fileComponent;
+
+    private final MedicalMapper medicalMapper;
 
     public File generate(LocalDate targetDate) {
         final var tempFile = this.fileComponent.getTempFile();
@@ -70,13 +80,7 @@ public class DoctorReportCardFileGenerator {
                 final var length = targetDate.lengthOfMonth();
                 ws.range(0, index, 0, length + 2).merge();
                 ws.value(0, index, String.format("Число месяцев (%s)", targetDate));
-                ws.style(0, index)
-                        .horizontalAlignment("center")
-                        .verticalAlignment("center")
-                        .fontSize(12)
-                        .fontName("Times New Roman")
-                        .wrapText(true)
-                        .set();
+                this.headerStyle(ws.style(0, index));
 
                 final var titles = IntStream.range(1, targetDate.lengthOfMonth() + 1).mapToObj(Objects::toString).collect(Collectors.toList());
                 titles.add(15, "Итого за 1 пол. месяца");
@@ -84,13 +88,7 @@ public class DoctorReportCardFileGenerator {
 
                 for (String title : titles) {
                     ws.value(1, index, title);
-                    ws.style(1, index)
-                            .horizontalAlignment("center")
-                            .verticalAlignment("center")
-                            .fontSize(12)
-                            .fontName("Times New Roman")
-                            .wrapText(true)
-                            .set();
+                    this.headerStyle(ws.style(1, index));
                     index++;
                 }
 
@@ -99,13 +97,7 @@ public class DoctorReportCardFileGenerator {
 
             ws.range(0, index, 1, index).merge();
             ws.value(0, index, headerText);
-            ws.style(0, index)
-                    .horizontalAlignment("center")
-                    .verticalAlignment("center")
-                    .fontSize(12)
-                    .fontName("Times New Roman")
-                    .wrapText(true)
-                    .set();
+            this.headerStyle(ws.style(0, index));
             ws.width(index, 30);
             index++;
         }
@@ -117,19 +109,44 @@ public class DoctorReportCardFileGenerator {
         final var doctors = this.medicalClient.getDoctors();
         final var planner = this.plannerClient.getScheduler(targetDate);
 
+
         var top = 2;
-        for (String s : List.of("Врач1", "Врач2", "Врач3")) {
-            generate(ws, targetDate, top, s);
+        for (final var doctor : doctors) {
+            this.generate(ws, top, targetDate, doctor,
+                    planner.stream()
+                            .filter(dayWorkSchedule -> dayWorkSchedule.getDoctors().stream().anyMatch(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())))
+                            .collect(Collectors.toMap(
+                                            DayWorkSchedule::getDate,
+                                            v -> v.getDoctors().stream().filter(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())).findFirst().orElseThrow()
+                                    )
+                            )
+            );
             top += EMPLOYEE_SPACE + 1;
         }
 
         ws.freezePane(1, 2);
     }
 
+    private void headerStyle(StyleSetter style) {
+        style
+                .horizontalAlignment("center")
+                .verticalAlignment("center")
+                .fontSize(12)
+                .fontName("Times New Roman")
+                .wrapText(true)
+                .set();
+    }
 
-    private void generate(Worksheet ws, LocalDate now, int line, String s) {
 
-        final var data = List.of(s, "РГ", "РК", "1", "1020203");
+    private void generate(Worksheet ws, int line, LocalDate now, Doctor doctor, Map<LocalDate, DoctorLoad> dayWorkDoctors) {
+
+        final var data = List.of(
+                "TODO",
+                this.medicalMapper.modality(doctor.getModality()),
+                this.medicalMapper.modality(doctor.getOptionalModality()),
+                doctor.getRate() + "",
+                doctor.getServiceNumber() + ""
+        );
         int i = 0;
         for (; i < data.size(); i++) {
             ws.range(line, i, EMPLOYEE_SPACE + line, i).merge();
@@ -144,20 +161,33 @@ public class DoctorReportCardFileGenerator {
         final var templateHours = List.of("с", "до", "перерыв", "отраб.");
         for (int j = 0; j < templateHours.size(); j++) {
             ws.value(line + j, i, templateHours.get(j));
-            ws.style(line + j, i)
-                    .horizontalAlignment("center")
-                    .verticalAlignment("center")
-                    .wrapText(true)
-                    .set();
+            this.regularStyle(ws.style(line + j, i));
         }
         i++;
 
-        final var hours = IntStream.range(1, now.lengthOfMonth() + 1).mapToObj(v -> List.of("8:00", "20:30", "30", "12")).collect(Collectors.toList());
-        hours.add(15, List.of("84"));
-        hours.add(List.of("72"));
+        final var hours = IntStream.range(1, now.lengthOfMonth() + 1)
+                .mapToObj(now::plusDays)
+                .map(date -> {
+                    final var load = dayWorkDoctors.get(date);
+                    if (load != null) {
+                        final var doubleHours = Optional.ofNullable(load.getTakenHours()).orElse(0d) + Optional.ofNullable(load.getTakenExtraHours()).orElse(0d);
+                        final var doctorHours = this.time(doubleHours);
+                        return List.of(
+                                doctor.getStartWorkDay().format(DATE_TIME_FORMATTER),
+                                doctor.getStartWorkDay().plus(doctorHours).format(DATE_TIME_FORMATTER),
+                                ((doubleHours < 6) ? 0 : (doubleHours <= 8) ? 30 : 1) + "",
+                                this.format(doctorHours)
+                        );
+                    } else {
+                        return new ArrayList<String>();
+                    }
+                })
+                .collect(Collectors.toList());
+        hours.add(15, this.calculateHours(now, dayWorkDoctors, 1, 15));
+        hours.add(this.calculateHours(now, dayWorkDoctors, 16, now.lengthOfMonth()));
 
-        hours.add(List.of("155"));
-        hours.add(List.of("155"));
+        hours.add(this.calculateHours(now, dayWorkDoctors, 1, now.lengthOfMonth()));
+        hours.add(List.of("TODO - refs"));
 
         hours.add(List.of(""));
         hours.add(List.of(""));
@@ -165,11 +195,8 @@ public class DoctorReportCardFileGenerator {
         for (List<String> hour : hours) {
             for (int j = 0; j < hour.size(); j++) {
                 ws.value(line + j, i, hour.get(j));
-                ws.style(line + j, i)
-                        .horizontalAlignment("center")
-                        .verticalAlignment("center")
-                        .wrapText(true)
-                        .set();
+                this.regularStyle(ws.style(line + j, i));
+
                 if (hour.size() == 1) {
                     ws.range(line, i, EMPLOYEE_SPACE + line, i).merge();
                     break;
@@ -177,5 +204,34 @@ public class DoctorReportCardFileGenerator {
             }
             i++;
         }
+    }
+
+    private List<String> calculateHours(LocalDate now, Map<LocalDate, DoctorLoad> dayWorkDoctors, int start, int end) {
+        return IntStream.range(start, end + 1).mapToObj(now::withDayOfMonth).map(dayWorkDoctors::get).filter(Objects::nonNull)
+                .map(v ->
+                        Optional.ofNullable(v.getTakenExtraHours()).orElse(0d) + Optional.ofNullable(v.getTakenHours()).orElse(0d)
+                ).reduce(Double::sum).map(this::time).map(this::format).map(List::of).orElse(List.of(this.format(Duration.ZERO)));
+    }
+
+
+    private String format(Duration duration) {
+        return String.format("%02d:%02d", duration.toHours(), duration.toMinutes());
+    }
+
+    private Duration time(Double hoursDoubleObj) {
+        final double hoursDouble = Optional.ofNullable(hoursDoubleObj).orElse(0d);
+        long hours = (long) hoursDouble;
+        long minutes = (long) ((hoursDouble - hours) * 60);
+        long seconds = (long) (((hoursDouble - hours) * 60 - minutes) * 60);
+
+        return Duration.ofHours(hours).plusMinutes(minutes).plusSeconds(seconds);
+    }
+
+    private void regularStyle(StyleSetter style) {
+        style
+                .horizontalAlignment("center")
+                .verticalAlignment("center")
+                .wrapText(true)
+                .set();
     }
 }
