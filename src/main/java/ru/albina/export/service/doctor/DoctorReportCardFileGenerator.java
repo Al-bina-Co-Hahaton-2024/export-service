@@ -204,6 +204,7 @@ public class DoctorReportCardFileGenerator {
             }
             i++;
         }
+        //ws.range(line, 0, EMPLOYEE_SPACE + line, i).style().borderStyle(BorderStyle.MEDIUM_DASH_DOT_DOT);
     }
 
     private List<String> calculateHours(LocalDate now, Map<LocalDate, DoctorLoad> dayWorkDoctors, int start, int end) {
@@ -215,7 +216,7 @@ public class DoctorReportCardFileGenerator {
 
 
     private String format(Duration duration) {
-        return String.format("%s:%s", duration.toHours(), duration.toMinutes());
+        return String.format("%s:%s", duration.toHours(), duration.toMinutesPart());
     }
 
     private Duration time(Double hoursDoubleObj) {
