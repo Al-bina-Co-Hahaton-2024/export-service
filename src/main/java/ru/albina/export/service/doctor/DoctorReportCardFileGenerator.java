@@ -8,6 +8,7 @@ import ru.albina.export.client.PlannerClient;
 import ru.albina.export.client.ReferenceClient;
 import ru.albina.export.client.UserClient;
 import ru.albina.export.component.FileComponent;
+import ru.albina.export.dto.medical.AbsenceSchedule;
 import ru.albina.export.dto.medical.Doctor;
 import ru.albina.export.dto.schedule.DayWorkSchedule;
 import ru.albina.export.dto.schedule.DoctorLoad;
@@ -146,7 +147,7 @@ public class DoctorReportCardFileGenerator {
     }
 
     private String map(DayOfWeek dayOfWeek) {
-        return switch (dayOfWeek){
+        return switch (dayOfWeek) {
             case MONDAY -> "ПН";
             case TUESDAY -> "ВТ";
             case WEDNESDAY -> "СР";
@@ -202,6 +203,10 @@ public class DoctorReportCardFileGenerator {
                 .borderStyle(BorderSide.BOTTOM, BorderStyle.THIN)
                 .set();
         i++;
+        final var absenceSchedules = doctor.getAbsenceSchedules().stream()
+                .map(AbsenceSchedule::toFlatList)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
 
         final var hours = IntStream.range(1, now.lengthOfMonth() + 1)
                 .mapToObj(now::withDayOfMonth)
@@ -217,6 +222,8 @@ public class DoctorReportCardFileGenerator {
                                 warmup + "",
                                 this.format(doctorHours)
                         );
+                    } else if (absenceSchedules.contains(date)) {
+                        return List.of("Отгул");
                     } else {
                         return new ArrayList<String>();
                     }
