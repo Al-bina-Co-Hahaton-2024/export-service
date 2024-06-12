@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -89,7 +90,7 @@ public class DoctorReportCardFileGenerator {
 
                 final var titles = IntStream.range(1, targetDate.lengthOfMonth() + 1)
                         .mapToObj(targetDate::withDayOfMonth)
-                        .map(localDate -> targetDate.getDayOfMonth() + "\n" + targetDate.getDayOfWeek())
+                        .map(localDate -> localDate.getDayOfMonth() + "\n" + this.map(localDate.getDayOfWeek()))
                         .collect(Collectors.toList());
                 titles.add(15, "Итого за 1 пол. месяца");
                 titles.add("Итого за 2 пол. месяца");
@@ -142,6 +143,18 @@ public class DoctorReportCardFileGenerator {
         }
 
         ws.freezePane(1, 2);
+    }
+
+    private String map(DayOfWeek dayOfWeek) {
+        return switch (dayOfWeek){
+            case MONDAY -> "ПН";
+            case TUESDAY -> "ВТ";
+            case WEDNESDAY -> "СР";
+            case THURSDAY -> "ЧТ";
+            case FRIDAY -> "ПТ";
+            case SATURDAY -> "СУБ";
+            case SUNDAY -> "ВСК";
+        };
     }
 
     private void headerStyle(StyleSetter style) {
