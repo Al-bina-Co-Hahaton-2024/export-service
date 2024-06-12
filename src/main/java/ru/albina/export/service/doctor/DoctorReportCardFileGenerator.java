@@ -213,14 +213,15 @@ public class DoctorReportCardFileGenerator {
                 .map(date -> {
                     final var load = dayWorkDoctors.get(date);
                     if (load != null) {
-                        final var doubleHours = Optional.ofNullable(load.getTakenHours()).orElse(0d) + Optional.ofNullable(load.getTakenExtraHours()).orElse(0d);
+                        final var extraHours = Optional.ofNullable(load.getTakenExtraHours()).orElse(0d);
+                        final var doubleHours = Optional.ofNullable(load.getTakenHours()).orElse(0d) + extraHours;
                         final var doctorHours = this.time(doubleHours);
                         final var warmup = (doubleHours < 6) ? 0 : (doubleHours <= 8) ? 30 : 60;
                         return List.of(
                                 Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.format(DATE_TIME_FORMATTER)).orElse(""),
                                 Optional.ofNullable(doctor.getStartWorkDay()).map(v -> v.plus(doctorHours).plusMinutes(warmup).format(DATE_TIME_FORMATTER)).orElse(""),
                                 warmup + "",
-                                this.format(doctorHours)
+                                this.format(doctorHours) + (extraHours > 0d ? String.format("(доп. %s)", this.format(this.time(extraHours))) : "")
                         );
                     } else if (absenceSchedules.contains(date)) {
                         return List.of("Отгул");
