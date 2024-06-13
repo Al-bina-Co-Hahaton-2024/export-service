@@ -65,7 +65,15 @@ public class ForecastReportFileGenerator {
 
             for (int i = 0; i < HEADERS.size(); i++) {
                 ws.value(line, i, HEADERS.get(i));
+                ws.style(line, i)
+                        .horizontalAlignment("center")
+                        .verticalAlignment("center")
+                        .fontSize(12)
+                        .fontName("Times New Roman")
+                        .wrapText(true)
+                        .set();
             }
+            ws.rowHeight(line, 45);
             line++;
             for (WorkloadWeek workloadWeek : generate) {
                 for (int i = 0; i < PARSER.size(); i++) {
