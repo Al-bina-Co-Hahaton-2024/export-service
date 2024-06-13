@@ -4,8 +4,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import ru.albina.backlib.configuration.WebConstants;
+import ru.albina.export.dto.reference.GetOrGenerateYearlyWorkloadRequest;
 import ru.albina.export.dto.reference.HoursPerMonthValue;
 import ru.albina.export.dto.reference.WeekNumberResult;
+import ru.albina.export.dto.reference.Workload;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -45,6 +47,16 @@ public class ReferenceClient {
                 .uri(uriBuilder -> uriBuilder.path(WebConstants.FULL_PRIVATE + "/week-numbers").queryParam("dates", localDates).build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<WeekNumberResult>>() {
+                })
+                .block();
+    }
+
+    public List<Workload> getWorkload(List<GetOrGenerateYearlyWorkloadRequest> request) {
+        return this.webClient.post()
+                .uri(WebConstants.FULL_PRIVATE + "/workloads/calculate")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<Workload>>() {
                 })
                 .block();
     }
