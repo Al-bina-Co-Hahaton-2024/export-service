@@ -81,7 +81,7 @@ public class ForecastReportFileGenerator {
                 }
                 line++;
             }
-
+            ws.freezePane(1, 0);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
