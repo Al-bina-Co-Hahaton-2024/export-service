@@ -20,5 +20,5 @@ public class DayWorkSchedule {
 
     private boolean isActual;
 
-    private List<DoctorLoad> doctors;
+    private List<DoctorLoad> doctorSchedules;
 }
