@@ -129,7 +129,7 @@ public class DoctorReportCardFileGenerator {
             this.generate(ws,
                     top,
                     targetDate,
-                    hours,
+                    hours * doctor.getRate(),
                     users.getOrDefault(doctor.getId(), UserFullName.builder().last("Er").first("ro").last("r").build()),
                     doctor,
                     planner.stream()
