@@ -234,7 +234,7 @@ public class DoctorReportCardFileGenerator {
         hours.add(this.calculateHours(now, dayWorkDoctors, 16, now.lengthOfMonth()));
 
         hours.add(this.calculateHours(now, dayWorkDoctors, 1, now.lengthOfMonth()));
-        hours.add(List.of("" + hoursForMonth));
+        hours.add(List.of(this.format(this.time(hoursForMonth))));
 
         hours.add(List.of(""));
         hours.add(List.of(""));
