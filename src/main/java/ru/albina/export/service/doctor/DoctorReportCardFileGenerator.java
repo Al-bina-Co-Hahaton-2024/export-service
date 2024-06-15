@@ -133,10 +133,10 @@ public class DoctorReportCardFileGenerator {
                     users.getOrDefault(doctor.getId(), UserFullName.builder().last("Er").first("ro").last("r").build()),
                     doctor,
                     planner.stream()
-                            .filter(dayWorkSchedule -> dayWorkSchedule.getDoctors().stream().anyMatch(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())))
+                            .filter(dayWorkSchedule -> dayWorkSchedule.getDoctorSchedules().stream().anyMatch(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())))
                             .collect(Collectors.toMap(
                                             DayWorkSchedule::getDate,
-                                            v -> v.getDoctors().stream().filter(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())).findFirst().orElseThrow()
+                                            v -> v.getDoctorSchedules().stream().filter(doctorLoad -> doctorLoad.getDoctorId().equals(doctor.getId())).findFirst().orElseThrow()
                                     )
                             )
             );
