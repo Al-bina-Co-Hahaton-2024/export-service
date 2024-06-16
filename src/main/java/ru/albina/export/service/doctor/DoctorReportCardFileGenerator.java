@@ -86,7 +86,7 @@ public class DoctorReportCardFileGenerator {
             if (headerText.equals(PLACEHOLDER)) {
                 final var length = targetDate.lengthOfMonth();
                 ws.range(0, index, 0, length + 2).merge();
-                ws.value(0, index, String.format("Число месяцев (%s)", targetDate));
+                ws.value(0, index, String.format("Числа месяца (%s)", targetDate.withDayOfMonth(1)));
                 this.headerStyle(ws.style(0, index));
 
                 final var titles = IntStream.range(1, targetDate.lengthOfMonth() + 1)
